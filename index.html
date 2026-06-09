@@ -607,6 +607,10 @@
             <button class="button ghost" id="clearKeyBtn" type="button">저장된 키 삭제</button>
           </div>
           <div class="preview" id="domainDebug"></div>
+          <div class="preview">
+            초기화 버튼은 방문일·차량번호·출발지·경로 결과만 초기화합니다.<br>
+            저장된 Kakao JavaScript Key는 유지되며, 삭제가 필요하면 “저장된 키 삭제” 버튼을 사용하세요.
+          </div>
           <div id="mapError" class="error"></div>
           <div id="sdkDebugBox" class="preview hidden"></div>
           <div id="mapSuccess" class="success"></div>
@@ -1164,6 +1168,7 @@
     }
 
     function resetForm() {
+      // 화면 입력값만 초기화한다. Kakao JavaScript Key(localStorage)는 유지한다.
       hideError(els.formError);
       els.visitDate.value = todayString();
       els.carNumber.value = "";
@@ -1186,19 +1191,23 @@
       els.adminModal.style.display = "flex";
       els.adminPassword.value = "";
       hideError(els.adminLoginError);
+
       const savedKey = localStorage.getItem("kdhcKakaoJsKey");
       if (savedKey) els.kakaoKey.value = savedKey;
-      if (localStorage.getItem("kdhcAdminLoggedIn") === "true") {
-        els.adminLoginBox.classList.add("hidden");
-        els.adminPanel.classList.remove("hidden");
-      } else {
-        els.adminLoginBox.classList.remove("hidden");
-        els.adminPanel.classList.add("hidden");
-      }
+
+      // 관리자 설정은 열 때마다 비밀번호를 다시 확인한다.
+      els.adminLoginBox.classList.remove("hidden");
+      els.adminPanel.classList.add("hidden");
+
+      setTimeout(() => els.adminPassword.focus(), 50);
     }
 
     function closeAdminModal() {
       els.adminModal.style.display = "none";
+      els.adminPassword.value = "";
+      els.adminLoginBox.classList.remove("hidden");
+      els.adminPanel.classList.add("hidden");
+      hideError(els.adminLoginError);
     }
 
     function adminPasswordValue() {
@@ -1211,7 +1220,10 @@
         showError(els.adminLoginError, "비밀번호가 맞지 않아.");
         return;
       }
-      localStorage.setItem("kdhcAdminLoggedIn", "true");
+
+      const savedKey = localStorage.getItem("kdhcKakaoJsKey");
+      if (savedKey) els.kakaoKey.value = savedKey;
+
       els.adminLoginBox.classList.add("hidden");
       els.adminPanel.classList.remove("hidden");
     }
@@ -1224,10 +1236,13 @@
       }
       localStorage.setItem("kdhcAdminPassword", newPw);
       els.newAdminPassword.value = "";
-      showSuccess(els.passwordChangeMsg, "비밀번호를 변경했어.");
+      showSuccess(els.passwordChangeMsg, "비밀번호를 변경했어. 다음 관리자 설정부터 새 비밀번호를 사용합니다.");
     }
 
     function init() {
+      // 이전 버전에서 저장됐을 수 있는 관리자 로그인 유지값 제거
+      localStorage.removeItem("kdhcAdminLoggedIn");
+
       fillDestinations();
       els.visitDate.value = todayString();
 
@@ -1266,7 +1281,7 @@
       els.clearKeyBtn.addEventListener("click", () => {
         localStorage.removeItem("kdhcKakaoJsKey");
         els.kakaoKey.value = "";
-        showSuccess(els.mapSuccess, "저장된 JavaScript Key를 삭제했어.");
+        showSuccess(els.mapSuccess, "저장된 JavaScript Key를 삭제했어. 초기화 버튼으로는 삭제되지 않습니다.");
       });
 
       els.changePasswordBtn.addEventListener("click", changePassword);
