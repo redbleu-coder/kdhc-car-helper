@@ -806,10 +806,10 @@
 
     function renderResult(result) {
       const statusClass = result.allowed ? "ok" : "no";
-      const title = result.allowed ? "운행 가능" : "차량출입 차단 가능";
+      const title = result.allowed ? "운행 가능" : "차량 출입 불가";
       const message = result.allowed
         ? "방문일과 차량번호 끝자리의 홀짝이 일치하므로 일반 2부제 기준상 차량 운행 가능으로 판단됩니다."
-        : "방문일과 차량번호 끝자리의 홀짝이 일치하지 않으므로 일반 2부제 기준상 차량출입 차단 대상일 수 있습니다. 아래 이동 정보 입력에서 대중교통 또는 차량 이동 대안을 확인해 주세요.";
+        : "방문일과 차량번호 끝자리의 홀짝이 일치하지 않으므로 일반 2부제 기준상 차량 출입 불가로 판단됩니다. 아래 이동 정보 입력에서 대중교통 또는 차량 이동 대안을 확인해 주세요.";
 
       els.statusBox.innerHTML = `
         <div class="status ${statusClass}">
@@ -841,7 +841,7 @@
     }
 
     function makeSearchLink(query) {
-      return `https://map.kakao.com/link/search/${encodeURIComponent(query)}`;
+      return `https://map.kakao.com/?q=${encodeURIComponent(query)}`;
     }
 
     function makeRouteLink(mode) {
@@ -887,19 +887,21 @@
         `;
       } else {
         const link = makeRouteLink("car");
-        const parkingLink = makeSearchLink(`${getDestinationSearchText(dest)} 주차장`);
+        const parkingQuery = `${getDisplayDestinationName(dest.name)} 인근 주차장`;
+        const parkingLink = makeSearchLink(parkingQuery);
         els.routeBox.innerHTML = `
           <h3>🚗 차량 길찾기</h3>
-          <p>일반 2부제 기준상 차량출입 차단 대상일 수 있습니다. 차량 이용 전 사내 공지 및 예외 적용 여부를 먼저 확인해 주세요.</p>
+          <p>일반 2부제 기준상 차량 출입 불가로 판단됩니다. 차량 이용 전 사내 공지 및 예외 적용 여부를 먼저 확인해 주세요.</p>
           <div class="route-detail">
             <div><strong>출발지:</strong> ${escapeHtml(startName)}</div>
             <div><strong>도착지:</strong> ${escapeHtml(getDisplayDestinationName(dest.name))}</div>
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
-            <div><strong>검색 기준:</strong> ${escapeHtml(getDestinationSearchText(dest))}</div>
+            <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(getDestinationSearchText(dest))}</div>
+            <div><strong>인근 주차장 검색 기준:</strong> ${escapeHtml(parkingQuery)}</div>
           </div>
           <div class="row">
             <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 차량 길찾기</a>
-            <a class="button ghost" href="${parkingLink}" target="_blank" rel="noopener noreferrer">도착지 주변 주차장 찾기</a>
+            <a class="button ghost" href="${parkingLink}" target="_blank" rel="noopener noreferrer">도착지 인근 주차장 찾기</a>
           </div>
         `;
       }
@@ -1150,7 +1152,7 @@
         `차량번호: ${lastResult.carNumber}`,
         `차량 끝자리: ${lastResult.lastDigit}번 (${lastResult.carParity})`,
         `방문일 일자: ${lastResult.day}일 (${lastResult.dayParity})`,
-        `2부제 판단: ${lastResult.allowed ? "운행 가능" : "차량출입 차단 가능"}`
+        `2부제 판단: ${lastResult.allowed ? "운행 가능" : "차량 출입 불가"}`
       ].join("\n");
 
       navigator.clipboard.writeText(text).then(() => {
