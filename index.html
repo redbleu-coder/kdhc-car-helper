@@ -591,9 +591,12 @@
 
       <div id="adminLoginBox">
         <label for="adminPassword">관리자 비밀번호</label>
-        <input id="adminPassword" type="password" placeholder="비밀번호를 입력하세요" />
-        <button class="button primary" id="adminLoginBtn" type="button" style="width:100%; margin-top:10px;">관리자 설정 열기</button>
-        <div class="preview">초기 비밀번호는 admin1234 입니다.</div>
+        <input id="adminPassword" type="password" placeholder="초기 비밀번호: admin1234" autocomplete="off" />
+        <button class="button primary" id="adminLoginBtn" type="button" style="width:100%; margin-top:10px;">확인</button>
+        <div class="preview">
+          관리자 설정을 열려면 비밀번호를 입력해야 합니다.<br>
+          초기 비밀번호는 <strong>admin1234</strong> 입니다.
+        </div>
         <div id="adminLoginError" class="error"></div>
       </div>
 
@@ -619,7 +622,7 @@
         <div class="admin-section">
           <h3 style="margin:0 0 10px; color:var(--navy);">비밀번호 변경</h3>
           <label for="newAdminPassword">새 비밀번호</label>
-          <input id="newAdminPassword" type="password" placeholder="새 비밀번호" />
+          <input id="newAdminPassword" type="password" placeholder="새 비밀번호를 입력하세요" autocomplete="off" />
           <button class="button ghost" id="changePasswordBtn" type="button" style="width:100%; margin-top:10px;">비밀번호 변경</button>
           <div id="passwordChangeMsg" class="success"></div>
         </div>
@@ -1190,16 +1193,20 @@
     function openAdminModal() {
       els.adminModal.style.display = "flex";
       els.adminPassword.value = "";
+      els.newAdminPassword.value = "";
       hideError(els.adminLoginError);
+      hideSuccess(els.passwordChangeMsg);
+      hideError(els.mapError);
+      hideSuccess(els.mapSuccess);
 
-      const savedKey = localStorage.getItem("kdhcKakaoJsKey");
-      if (savedKey) els.kakaoKey.value = savedKey;
-
-      // 관리자 설정은 열 때마다 비밀번호를 다시 확인한다.
+      // 관리자 설정은 열 때마다 반드시 비밀번호 입력 화면부터 시작한다.
       els.adminLoginBox.classList.remove("hidden");
       els.adminPanel.classList.add("hidden");
 
-      setTimeout(() => els.adminPassword.focus(), 50);
+      const savedKey = localStorage.getItem("kdhcKakaoJsKey");
+      els.kakaoKey.value = savedKey || "";
+
+      setTimeout(() => els.adminPassword.focus(), 80);
     }
 
     function closeAdminModal() {
@@ -1216,24 +1223,31 @@
 
     function loginAdmin() {
       hideError(els.adminLoginError);
-      if (els.adminPassword.value !== adminPasswordValue()) {
+
+      const inputPw = els.adminPassword.value;
+      const savedPw = adminPasswordValue();
+
+      if (inputPw !== savedPw) {
         showError(els.adminLoginError, "비밀번호가 맞지 않아.");
         return;
       }
 
       const savedKey = localStorage.getItem("kdhcKakaoJsKey");
-      if (savedKey) els.kakaoKey.value = savedKey;
+      els.kakaoKey.value = savedKey || "";
 
       els.adminLoginBox.classList.add("hidden");
       els.adminPanel.classList.remove("hidden");
     }
 
     function changePassword() {
+      hideSuccess(els.passwordChangeMsg);
+
       const newPw = els.newAdminPassword.value.trim();
       if (newPw.length < 4) {
         showSuccess(els.passwordChangeMsg, "비밀번호 변경 실패: 4자 이상 입력해줘.");
         return;
       }
+
       localStorage.setItem("kdhcAdminPassword", newPw);
       els.newAdminPassword.value = "";
       showSuccess(els.passwordChangeMsg, "비밀번호를 변경했어. 다음 관리자 설정부터 새 비밀번호를 사용합니다.");
