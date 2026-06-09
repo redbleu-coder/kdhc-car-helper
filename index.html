@@ -409,6 +409,10 @@
 
     .route-detail div { margin:4px 0; }
 
+    .route-box .row .button {
+      width:100%;
+    }
+
     .copy-note {
       display:none;
       margin-top:10px;
@@ -417,11 +421,19 @@
       font-weight:900;
     }
 
+    .bottom-reset {
+      margin-top:22px;
+    }
+
+    .bottom-reset .button {
+      width:100%;
+    }
+
     .footer {
       text-align:center;
       color:#94A3B8;
       font-size:12px;
-      margin-top:24px;
+      margin-top:18px;
     }
 
     .modal-backdrop {
@@ -523,7 +535,6 @@
 
         <div class="row">
           <button class="button primary" id="checkBtn" type="button">2부제 여부 확인</button>
-          <button class="button ghost" id="resetBtn" type="button">초기화</button>
         </div>
 
         <div id="formError" class="error"></div>
@@ -532,9 +543,7 @@
       <div id="resultArea" class="hidden">
         <div id="statusBox"></div>
         <div class="facts" id="factGrid"></div>
-        <div class="row" style="margin-top:16px;">
-          <button class="button ghost" id="bottomResetBtn" type="button">초기화</button>
-        </div>
+        
       </div>
     </section>
 
@@ -575,6 +584,10 @@
         <button id="carTab" type="button" class="tab">🚗 차량</button>
       </div>
       <div id="routeBox" class="route-box"></div>
+    </section>
+
+    <section class="bottom-reset">
+      <button class="button ghost" id="resetBtn" type="button">초기화</button>
     </section>
 
     <div class="footer">
@@ -698,7 +711,7 @@
       resultArea: document.getElementById("resultArea"),
       statusBox: document.getElementById("statusBox"),
       factGrid: document.getElementById("factGrid"),
-      bottomResetBtn: document.getElementById("bottomResetBtn"),
+      
 
       travelInputCard: document.getElementById("travelInputCard"),
       startPlace: document.getElementById("startPlace"),
@@ -899,7 +912,9 @@
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
             <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(routeQuery)}</div>
           </div>
-          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 확인하기</a>
+          <div class="row">
+            <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 확인하기</a>
+          </div>
         `;
       } else {
         const routeQuery = `출발지: ${startName} / 도착지: ${getRouteDestinationSearchText(dest)}`;
@@ -1278,7 +1293,6 @@
       els.checkBtn.addEventListener("click", handleCheck);
       els.routeReadyBtn.addEventListener("click", prepareRouteAfterResult);
       els.resetBtn.addEventListener("click", resetForm);
-      els.bottomResetBtn.addEventListener("click", resetForm);
 
       els.destination.addEventListener("change", updateDestinationPreview);
       els.trafficTab.addEventListener("click", () => setActiveRoute("traffic"));
