@@ -217,11 +217,6 @@
       border:1px solid #D6E1EA;
     }
 
-    .button.danger {
-      background:#FEE2E2;
-      color:#991B1B;
-      border:1px solid #FCA5A5;
-    }
 
     .mini-buttons {
       display:flex;
@@ -413,13 +408,6 @@
       width:100%;
     }
 
-    .copy-note {
-      display:none;
-      margin-top:10px;
-      color:var(--teal-dark);
-      font-size:13px;
-      font-weight:900;
-    }
 
     .bottom-reset {
       margin-top:22px;
@@ -543,7 +531,6 @@
       <div id="resultArea" class="hidden">
         <div id="statusBox"></div>
         <div class="facts" id="factGrid"></div>
-        
       </div>
     </section>
 
@@ -675,9 +662,6 @@
       return `한국지역난방공사 ${name} 인근 주차장`.trim();
     }
 
-    function getDestinationSearchText(destination) {
-      return getRouteDestinationSearchText(destination);
-    }
 
     const els = {
       openAdminBtn: document.getElementById("openAdminBtn"),
@@ -711,7 +695,6 @@
       resultArea: document.getElementById("resultArea"),
       statusBox: document.getElementById("statusBox"),
       factGrid: document.getElementById("factGrid"),
-      
 
       travelInputCard: document.getElementById("travelInputCard"),
       startPlace: document.getElementById("startPlace"),
@@ -1236,7 +1219,7 @@
     function changePassword() {
       const newPw = els.newAdminPassword.value.trim();
       if (newPw.length < 4) {
-        showSuccess(els.passwordChangeMsg, "비밀번호는 4자 이상으로 입력해줘.");
+        showSuccess(els.passwordChangeMsg, "비밀번호 변경 실패: 4자 이상 입력해줘.");
         return;
       }
       localStorage.setItem("kdhcAdminPassword", newPw);
