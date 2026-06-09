@@ -653,11 +653,18 @@
       return `한국지역난방공사 ${name}`;
     }
 
-    function getDestinationSearchText(destination) {
+    function getRouteDestinationSearchText(destination) {
       const name = typeof destination === "string" ? destination : destination.name;
-      const loc = typeof destination === "string" ? locations[destination] : destination;
-      const address = loc && loc.address ? loc.address : "";
-      return `${getDisplayDestinationName(name)} ${address}`.trim();
+      return `한국지역난방공사 ${name}`.trim();
+    }
+
+    function getParkingSearchText(destination) {
+      const name = typeof destination === "string" ? destination : destination.name;
+      return `한국지역난방공사 인근 ${name}`.trim();
+    }
+
+    function getDestinationSearchText(destination) {
+      return getRouteDestinationSearchText(destination);
     }
 
     const els = {
@@ -881,13 +888,13 @@
             <div><strong>출발지:</strong> ${escapeHtml(startName)}</div>
             <div><strong>도착지:</strong> ${escapeHtml(getDisplayDestinationName(dest.name))}</div>
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
-            <div><strong>검색 기준:</strong> ${escapeHtml(getDestinationSearchText(dest))}</div>
+            <div><strong>목적지 검색 기준:</strong> ${escapeHtml(getRouteDestinationSearchText(dest))}</div>
           </div>
           <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 대중교통 길찾기</a>
         `;
       } else {
         const link = makeRouteLink("car");
-        const parkingQuery = `${getDisplayDestinationName(dest.name)} 인근 주차장`;
+        const parkingQuery = getParkingSearchText(dest);
         const parkingLink = makeSearchLink(parkingQuery);
         els.routeBox.innerHTML = `
           <h3>🚗 차량 길찾기</h3>
@@ -896,7 +903,7 @@
             <div><strong>출발지:</strong> ${escapeHtml(startName)}</div>
             <div><strong>도착지:</strong> ${escapeHtml(getDisplayDestinationName(dest.name))}</div>
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
-            <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(getDestinationSearchText(dest))}</div>
+            <div><strong>목적지 검색 기준:</strong> ${escapeHtml(getRouteDestinationSearchText(dest))}</div>
             <div><strong>인근 주차장 검색 기준:</strong> ${escapeHtml(parkingQuery)}</div>
           </div>
           <div class="row">
