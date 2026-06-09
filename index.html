@@ -533,9 +533,8 @@
         <div id="statusBox"></div>
         <div class="facts" id="factGrid"></div>
         <div class="row" style="margin-top:16px;">
-          <button class="button ghost" id="copyBtn" type="button">결과 복사하기</button>
+          <button class="button ghost" id="bottomResetBtn" type="button">초기화</button>
         </div>
-        <div id="copyNote" class="copy-note">복사했어.</div>
       </div>
     </section>
 
@@ -699,8 +698,7 @@
       resultArea: document.getElementById("resultArea"),
       statusBox: document.getElementById("statusBox"),
       factGrid: document.getElementById("factGrid"),
-      copyBtn: document.getElementById("copyBtn"),
-      copyNote: document.getElementById("copyNote"),
+      bottomResetBtn: document.getElementById("bottomResetBtn"),
 
       travelInputCard: document.getElementById("travelInputCard"),
       startPlace: document.getElementById("startPlace"),
@@ -901,10 +899,9 @@
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
             <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(routeQuery)}</div>
           </div>
-          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 출발지·도착지 길찾기 열기</a>
+          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 확인하기</a>
         `;
       } else {
-        const link = makeRouteLink("car");
         const routeQuery = `출발지: ${startName} / 도착지: ${getRouteDestinationSearchText(dest)}`;
         const parkingQuery = getParkingSearchText(dest);
         const parkingLink = makeSearchLink(parkingQuery);
@@ -919,8 +916,7 @@
             <div><strong>인근 주차장 검색 기준:</strong> ${escapeHtml(parkingQuery)}</div>
           </div>
           <div class="row">
-            <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 출발지·도착지 길찾기 열기</a>
-            <a class="button ghost" href="${parkingLink}" target="_blank" rel="noopener noreferrer">도착지 인근 주차장 찾기</a>
+            <a class="button teal" href="${parkingLink}" target="_blank" rel="noopener noreferrer">도착지 인근 주차장 찾기</a>
           </div>
         `;
       }
@@ -1169,23 +1165,6 @@
       }
     }
 
-    function copyResult() {
-      if (!lastResult) return;
-      const text = [
-        "[오늘의 나는 2부제? 어떻게 가나요? 결과]",
-        `방문일자: ${lastResult.dateValue}`,
-        `차량번호: ${lastResult.carNumber}`,
-        `차량 끝자리: ${lastResult.lastDigit}번 (${lastResult.carParity})`,
-        `방문일 일자: ${lastResult.day}일 (${lastResult.dayParity})`,
-        `2부제 판단: ${lastResult.allowed ? "운행 가능" : "차량 출입 불가"}`
-      ].join("\n");
-
-      navigator.clipboard.writeText(text).then(() => {
-        els.copyNote.style.display = "block";
-        setTimeout(() => els.copyNote.style.display = "none", 1800);
-      }).catch(() => alert(text));
-    }
-
     function resetForm() {
       hideError(els.formError);
       els.visitDate.value = todayString();
@@ -1198,7 +1177,6 @@
       els.travelInputCard.classList.add("hidden");
       els.mapCard.classList.add("hidden");
       els.routeCard.classList.add("hidden");
-      els.copyNote.style.display = "none";
       lastResult = null;
       currentStart = null;
 
@@ -1300,7 +1278,7 @@
       els.checkBtn.addEventListener("click", handleCheck);
       els.routeReadyBtn.addEventListener("click", prepareRouteAfterResult);
       els.resetBtn.addEventListener("click", resetForm);
-      els.copyBtn.addEventListener("click", copyResult);
+      els.bottomResetBtn.addEventListener("click", resetForm);
 
       els.destination.addEventListener("change", updateDestinationPreview);
       els.trafficTab.addEventListener("click", () => setActiveRoute("traffic"));
