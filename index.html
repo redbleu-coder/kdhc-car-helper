@@ -851,19 +851,29 @@
       return `https://map.kakao.com/?q=${encodeURIComponent(query)}`;
     }
 
-    function makeKakaoDirectionLink(startName, destinationName) {
-      const params = new URLSearchParams();
-      params.set("sName", startName);
-      params.set("eName", destinationName);
-      return `https://map.kakao.com/?${params.toString()}`;
+    function makeKakaoDirectionLink(mode, startName, startLat, startLng, destinationName, destLat, destLng) {
+      return `https://map.kakao.com/link/by/${mode}/${encodeName(startName)},${startLat},${startLng}/${encodeName(destinationName)},${destLat},${destLng}`;
     }
 
     function makeRouteLink(mode) {
       const destination = currentDestination || { name: els.destination.value, ...locations[els.destination.value] };
-      const startName = els.startPlace.value.trim();
+      const startText = els.startPlace.value.trim();
       const destText = getRouteDestinationSearchText(destination);
 
-      return makeKakaoDirectionLink(startName, destText);
+      if (currentStart && currentStart.lat && currentStart.lng && destination && destination.lat && destination.lng) {
+        return makeKakaoDirectionLink(
+          mode,
+          startText,
+          currentStart.lat,
+          currentStart.lng,
+          destText,
+          destination.lat,
+          destination.lng
+        );
+      }
+
+      // 좌표 변환이 실패한 경우만 예외적으로 검색으로 보냄
+      return makeSearchLink(`${startText} ${destText}`);
     }
 
     function setActiveRoute(mode) {
@@ -891,7 +901,7 @@
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
             <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(routeQuery)}</div>
           </div>
-          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 길찾기 열기</a>
+          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 출발지·도착지 길찾기 열기</a>
         `;
       } else {
         const link = makeRouteLink("car");
@@ -909,7 +919,7 @@
             <div><strong>인근 주차장 검색 기준:</strong> ${escapeHtml(parkingQuery)}</div>
           </div>
           <div class="row">
-            <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 길찾기 열기</a>
+            <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 출발지·도착지 길찾기 열기</a>
             <a class="button ghost" href="${parkingLink}" target="_blank" rel="noopener noreferrer">도착지 인근 주차장 찾기</a>
           </div>
         `;
@@ -1143,6 +1153,12 @@
         if (mapLoaded) {
           await searchStartPlace(start);
           await setDestinationByAddress(els.destination.value);
+
+          if (!currentStart || !currentStart.lat || !currentStart.lng) {
+            throw new Error("출발지 주소를 카카오맵에서 찾지 못했어. 도로명주소나 지번주소를 더 정확히 입력해줘.");
+          }
+        } else {
+          throw new Error("길찾기를 사용하려면 관리자 설정에서 카카오지도를 먼저 불러와야 해.");
         }
 
         els.routeCard.classList.remove("hidden");
