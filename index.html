@@ -452,10 +452,11 @@
             <input id="kakaoKey" type="password" placeholder="카카오 개발자센터의 JavaScript 키를 입력하세요" autocomplete="off" />
             <button class="button teal" id="loadMapBtn" type="button">지도 불러오기</button>
           </div>
-          <div class="preview">
-            GitHub Pages 주소를 카카오 개발자센터의 Web 플랫폼 도메인에 등록한 뒤 실행해야 합니다. 키는 저장하지 않고 현재 화면에서만 사용합니다.
+          <div class="preview" id="domainDebug">
+            GitHub Pages 주소를 카카오 개발자센터의 JavaScript SDK 도메인에 등록한 뒤 실행해야 합니다. 키는 저장하지 않고 현재 화면에서만 사용합니다.
           </div>
           <div id="mapError" class="error"></div>
+          <div id="sdkDebugBox" class="preview hidden"></div>
           <div id="mapSuccess" class="success"></div>
         </div>
       </div>
@@ -561,7 +562,9 @@
       kakaoKey: document.getElementById("kakaoKey"),
       loadMapBtn: document.getElementById("loadMapBtn"),
       mapError: document.getElementById("mapError"),
+      sdkDebugBox: document.getElementById("sdkDebugBox"),
       mapSuccess: document.getElementById("mapSuccess"),
+      domainDebug: document.getElementById("domainDebug"),
       visitDate: document.getElementById("visitDate"),
       todayBtn: document.getElementById("todayBtn"),
       carNumber: document.getElementById("carNumber"),
@@ -809,10 +812,20 @@
     function loadKakaoMap() {
       hideError(els.mapError);
       hideSuccess(els.mapSuccess);
+      els.sdkDebugBox.classList.add("hidden");
+      els.sdkDebugBox.innerHTML = "";
 
       const key = els.kakaoKey.value.trim();
+      const origin = window.location.origin;
+      const href = window.location.href;
+
       if (!key) {
         showError(els.mapError, "Kakao JavaScript Key를 입력하고 지도를 불러와줘.");
+        return;
+      }
+
+      if (window.location.protocol === "file:") {
+        showError(els.mapError, "현재 file:// 방식으로 실행 중이야. GitHub Pages 주소 또는 http://localhost 서버로 실행해야 카카오지도가 동작해.");
         return;
       }
 
@@ -824,20 +837,62 @@
       const existing = document.getElementById("kakao-sdk");
       if (existing) existing.remove();
 
+      const sdkUrl = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${key}&libraries=services&autoload=false`;
+      const sdkUrlEncoded = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(key)}&libraries=services&autoload=false`;
+
       const script = document.createElement("script");
       script.id = "kakao-sdk";
-      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${encodeURIComponent(key)}&libraries=services&autoload=false`;
+      script.src = sdkUrlEncoded;
+      script.async = true;
+
+      const timeout = setTimeout(() => {
+        if (!window.kakao || !window.kakao.maps) {
+          showError(els.mapError, "카카오지도 SDK 응답이 늦거나 차단됐어. JavaScript Key, 도메인 등록, 네트워크 차단 여부를 확인해줘.");
+          showSdkDebug(sdkUrl, origin, href);
+        }
+      }, 8000);
+
       script.onload = () => {
+        clearTimeout(timeout);
         try {
-          kakao.maps.load(initializeMap);
+          if (!window.kakao || !window.kakao.maps) {
+            showError(els.mapError, "SDK 파일은 불러왔지만 kakao.maps 객체가 없어. JavaScript Key의 도메인 허용 상태를 확인해줘.");
+            showSdkDebug(sdkUrl, origin, href);
+            return;
+          }
+          kakao.maps.load(() => {
+            try {
+              initializeMap();
+            } catch (e) {
+              showError(els.mapError, "카카오지도 초기화 중 오류가 발생했어: " + (e && e.message ? e.message : e));
+              showSdkDebug(sdkUrl, origin, href);
+            }
+          });
         } catch (e) {
-          showError(els.mapError, "카카오지도 SDK 로드 후 초기화에 실패했어. API Key와 도메인 등록 상태를 확인해줘.");
+          showError(els.mapError, "카카오지도 SDK 로드 후 초기화에 실패했어: " + (e && e.message ? e.message : e));
+          showSdkDebug(sdkUrl, origin, href);
         }
       };
+
       script.onerror = () => {
-        showError(els.mapError, "카카오지도 SDK를 불러오지 못했어. API Key와 도메인 등록 상태를 확인해줘.");
+        clearTimeout(timeout);
+        showError(els.mapError, "카카오지도 SDK를 불러오지 못했어. JavaScript Key와 JavaScript SDK 도메인 등록 상태를 확인해줘.");
+        showSdkDebug(sdkUrl, origin, href);
       };
+
       document.head.appendChild(script);
+    }
+
+    function showSdkDebug(sdkUrl, origin, href) {
+      els.sdkDebugBox.classList.remove("hidden");
+      els.sdkDebugBox.innerHTML = `
+        <strong>진단 정보</strong><br>
+        현재 페이지 주소: ${escapeHtml(href)}<br>
+        현재 origin: ${escapeHtml(origin)}<br>
+        카카오에 등록해야 하는 도메인: <strong>${escapeHtml(origin)}</strong><br>
+        SDK 직접 확인: <a href="${escapeHtml(sdkUrl)}" target="_blank" rel="noopener noreferrer">새 창에서 열기</a><br>
+        새 창에서 appKey 또는 domain 관련 오류가 보이면 카카오 개발자센터 설정 문제야.
+      `;
     }
 
     function initializeMap() {
@@ -1024,6 +1079,15 @@
     function init() {
       fillDestinations();
       els.visitDate.value = todayString();
+      if (els.domainDebug) {
+        const origin = window.location.origin || "file://";
+        els.domainDebug.innerHTML = `
+          GitHub Pages 주소를 카카오 개발자센터의 <strong>JavaScript SDK 도메인</strong>에 등록한 뒤 실행해야 합니다.<br>
+          현재 origin: <strong>${escapeHtml(origin)}</strong><br>
+          등록해야 하는 도메인: <strong>${escapeHtml(origin)}</strong><br>
+          키는 저장하지 않고 현재 화면에서만 사용합니다.
+        `;
+      }
 
       els.loadMapBtn.addEventListener("click", loadKakaoMap);
       els.todayBtn.addEventListener("click", () => els.visitDate.value = todayString());
