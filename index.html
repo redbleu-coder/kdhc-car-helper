@@ -660,7 +660,7 @@
 
     function getParkingSearchText(destination) {
       const name = typeof destination === "string" ? destination : destination.name;
-      return `한국지역난방공사 인근 ${name}`.trim();
+      return `한국지역난방공사 ${name} 인근 주차장`.trim();
     }
 
     function getDestinationSearchText(destination) {
@@ -851,19 +851,19 @@
       return `https://map.kakao.com/?q=${encodeURIComponent(query)}`;
     }
 
+    function makeKakaoDirectionLink(startName, destinationName) {
+      const params = new URLSearchParams();
+      params.set("sName", startName);
+      params.set("eName", destinationName);
+      return `https://map.kakao.com/?${params.toString()}`;
+    }
+
     function makeRouteLink(mode) {
       const destination = currentDestination || { name: els.destination.value, ...locations[els.destination.value] };
       const startName = els.startPlace.value.trim();
+      const destText = getRouteDestinationSearchText(destination);
 
-      if (currentStart && destination && currentStart.lat && currentStart.lng && destination.lat && destination.lng) {
-        return `https://map.kakao.com/link/by/${mode}/${encodeName(startName || "출발지")},${currentStart.lat},${currentStart.lng}/${encodeName(getDisplayDestinationName(destination.name))},${destination.lat},${destination.lng}`;
-      }
-
-      const destSearchText = getDestinationSearchText(destination);
-      const query = mode === "traffic"
-        ? `${startName}에서 ${destSearchText} 대중교통`
-        : `${startName}에서 ${destSearchText} 자동차`;
-      return makeSearchLink(query);
+      return makeKakaoDirectionLink(startName, destText);
     }
 
     function setActiveRoute(mode) {
@@ -881,6 +881,7 @@
 
       if (activeRouteMode === "traffic") {
         const link = makeRouteLink("traffic");
+        const routeQuery = `출발지: ${startName} / 도착지: ${getRouteDestinationSearchText(dest)}`;
         els.routeBox.innerHTML = `
           <h3>🚌 대중교통 길찾기</h3>
           <p>아래 버튼을 누르면 카카오맵에서 출발지와 <strong>${escapeHtml(getDisplayDestinationName(dest.name))}</strong> 기준으로 대중교통 경로를 확인할 수 있습니다.</p>
@@ -888,12 +889,13 @@
             <div><strong>출발지:</strong> ${escapeHtml(startName)}</div>
             <div><strong>도착지:</strong> ${escapeHtml(getDisplayDestinationName(dest.name))}</div>
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
-            <div><strong>목적지 검색 기준:</strong> ${escapeHtml(getRouteDestinationSearchText(dest))}</div>
+            <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(routeQuery)}</div>
           </div>
-          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 대중교통 길찾기</a>
+          <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 길찾기 열기</a>
         `;
       } else {
         const link = makeRouteLink("car");
+        const routeQuery = `출발지: ${startName} / 도착지: ${getRouteDestinationSearchText(dest)}`;
         const parkingQuery = getParkingSearchText(dest);
         const parkingLink = makeSearchLink(parkingQuery);
         els.routeBox.innerHTML = `
@@ -903,11 +905,11 @@
             <div><strong>출발지:</strong> ${escapeHtml(startName)}</div>
             <div><strong>도착지:</strong> ${escapeHtml(getDisplayDestinationName(dest.name))}</div>
             <div><strong>주소:</strong> ${escapeHtml(dest.address)}</div>
-            <div><strong>목적지 검색 기준:</strong> ${escapeHtml(getRouteDestinationSearchText(dest))}</div>
+            <div><strong>길찾기 검색 기준:</strong> ${escapeHtml(routeQuery)}</div>
             <div><strong>인근 주차장 검색 기준:</strong> ${escapeHtml(parkingQuery)}</div>
           </div>
           <div class="row">
-            <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 차량 길찾기</a>
+            <a class="button teal" href="${link}" target="_blank" rel="noopener noreferrer">카카오맵에서 길찾기 열기</a>
             <a class="button ghost" href="${parkingLink}" target="_blank" rel="noopener noreferrer">도착지 인근 주차장 찾기</a>
           </div>
         `;
